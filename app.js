@@ -191,7 +191,7 @@ function renderDriver(){
   let jobs=readyOrders().filter(function(o){return !(state.activeRoute||[]).includes(o.id);});
   if(driverFilter==='pay')jobs.sort(function(a,b){return driverPay(b)-driverPay(a);});
   if(driverFilter==='near')jobs.sort(function(a,b){return haversine({lat:36.849,lng:10.184},vendor(a.vendorId))-haversine({lat:36.849,lng:10.184},vendor(b.vendorId));});
-  if(driverFilter==='best')jobs.sort(function(a,b){return (driverPay(b)/Math.max(1,haversine(vendor(b.vendorId),b)))-(driverPay(a)/Math.max(1,haversine(vendor(a.vendorId),a));});
+  if(driverFilter==='best')jobs.sort(function(a,b){return (driverPay(b)/Math.max(1,haversine(vendor(b.vendorId),b)))-(driverPay(a)/Math.max(1,haversine(vendor(a.vendorId),a)));});
 
   const active=(state.activeRoute||[]).length>0;
   const remaining=activeStopsRemaining();
