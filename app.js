@@ -834,6 +834,115 @@ function openBuyerOrder(id){
     '<div class="detail-grid"><div class="detail-box"><b>Delivery address</b><span>'+o.address+'</span></div><div class="detail-box"><b>Payment</b><span>'+o.payment+'</span></div><div class="detail-box"><b>Note</b><span>'+o.notes+'</span></div><div class="detail-box"><b>Total</b><span>'+money(o.total)+'</span></div></div>'+
     '<div class="modal-actions"><button class="ghost-btn" onclick="showToast(\'Support opened\')">Get help</button><button class="primary-btn" onclick="closeModal()">Done</button></div>');
 }
+
+/* ===== UX interaction refinement ===== */
+var detailQty=1;
+
+function renderMarketplace(){
+  var cats=['All'].concat(Array.from(new Set(state.products.map(function(p){return p.category;}))).slice(0,9));
+  var vendors=getMarketplaceVendors();
+  var delivered=state.orders.filter(function(o){return o.status==='delivered';}).slice(0,4);
+  var fast=state.vendors.filter(function(v){return vendorEtaStart(v)<=30;}).slice(0,6);
+  var title=(selectedCategory!=='All'||marketFilter!=='all'||currentSearch)?'Results for you':'Top picks near you';
+
+  app.innerHTML='<div class="page ubereats-home">'+
+    '<div class="delivery-mode-row"><div class="delivery-toggle"><button class="'+(fulfillmentMode==='delivery'?'is-active':'')+'" onclick="setFulfillmentMode(\'delivery\')">Delivery</button><button class="'+(fulfillmentMode==='pickup'?'is-active':'')+'" onclick="setFulfillmentMode(\'pickup\')">Pickup</button></div><small class="muted">'+(fulfillmentMode==='delivery'?'Delivering now to ':'Pickup near ')+state.location+'</small></div>'+
+    '<div class="home-search"><span>⌕</span><button onclick="openSearch()">'+(currentSearch?currentSearch:'Search stores or food')+'</button></div>'+
+    '<div class="category-scroller">'+cats.map(function(cat){return '<button class="category-icon-btn '+(selectedCategory===cat?'is-active':'')+'" onclick="setBuyerCategory(\''+cat+'\')"><span class="category-icon">'+categoryEmoji(cat)+'</span><small>'+cat+'</small></button>';}).join('')+'</div>'+
+    '<div class="filter-scroller"><button class="ue-filter '+(marketFilter==='all'?'is-active':'')+'" onclick="setMarketFilter(\'all\')">All</button><button class="ue-filter '+(marketFilter==='offers'?'is-active':'')+'" onclick="setMarketFilter(\'offers\')">Offers</button><button class="ue-filter '+(marketFilter==='under30'?'is-active':'')+'" onclick="setMarketFilter(\'under30\')">Under 30 min</button><button class="ue-filter '+(marketFilter==='free'?'is-active':'')+'" onclick="setMarketFilter(\'free\')">0 DT delivery</button><button class="ue-filter '+(marketFilter==='top'?'is-active':'')+'" onclick="setMarketFilter(\'top\')">4.9+</button></div>'+
+    '<div class="offer-strip"><article class="offer-card black" onclick="setMarketFilter(\'offers\')"><div><small>LOCAL DEALS</small><h2>Something homemade<br>for tonight.</h2><p>Rotating offers from independent kitchens around Greater Tunis.</p></div><span class="offer-emoji">🥘</span></article><article class="offer-card green" onclick="setMarketFilter(\'free\')"><div><small>DELIVERY</small><h2>Selected 0 DT fees</h2><p>Discover makers with a lower delivery cost in your area.</p></div><span class="offer-emoji">🛵</span></article></div>'+
+    (delivered.length?'<section class="ue-section"><div class="ue-section-head"><div><h2>Order again</h2><p>Recent favorites, one tap away</p></div><button onclick="navigate(\'orders\')">Orders</button></div><div class="order-again-row">'+delivered.map(function(o){var v=vendor(o.vendorId);return '<article class="order-again-card" onclick="reorder(\''+o.id+'\')"><div class="order-again-thumb">'+v.emoji+'</div><div><h4>'+v.name+'</h4><small>'+orderItemNames(o)+'</small><div class="restaurant-submeta"><span>'+money(o.total)+'</span><span>•</span><span>Reorder</span></div></div></article>';}).join('')+'</div></section>':'')+
+    '<section class="ue-section"><div class="ue-section-head"><div><h2>'+title+'</h2><p>'+vendors.length+' home kitchens available</p></div><button onclick="navigate(\'stores\')">Browse all</button></div><div class="restaurant-grid">'+(vendors.length?vendors.slice(0,6).map(function(v){return restaurantCard(v,false);}).join(''):'<div class="empty-state" style="grid-column:1/-1"><span>⌕</span><h3>No matches</h3><p>Try another category, filter, or search.</p><button class="primary-btn" onclick="currentSearch=\'\';selectedCategory=\'All\';marketFilter=\'all\';render()">Clear filters</button></div>')+'</div></section>'+
+    (fast.length?'<section class="ue-section"><div class="ue-section-head"><div><h2>Quick & nearby</h2><p>Shorter estimated delivery windows</p></div><button onclick="setMarketFilter(\'under30\')">See all</button></div><div class="horizontal-restaurants">'+fast.map(function(v){return restaurantCard(v,true);}).join('')+'</div></section>':'')+
+    '</div>';
+}
+
+function openProductDetail(id){
+  var p=product(id),maker=vendor(p.vendorId);
+  if(!p||!maker)return;
+  detailQty=1;
+  renderProductDetailModal(p,maker);
+}
+function renderProductDetailModal(p,maker){
+  openModal('<div class="product-sheet-art" style="display:grid;place-items:center;height:150px;border-radius:16px;background:#f6f6f6;font-size:72px;margin-bottom:16px">'+p.emoji+'</div>'+
+    '<p class="eyebrow">'+maker.name+' · '+p.badge+'</p><h2>'+p.name+'</h2>'+
+    '<p>'+p.ingredients+'</p>'+
+    '<div class="detail-grid"><div class="detail-box"><b>Pack</b><span>'+p.unit+'</span></div><div class="detail-box"><b>Shelf life</b><span>'+p.shelf+'</span></div><div class="detail-box"><b>Allergens</b><span>'+p.allergens+'</span></div><div class="detail-box"><b>Availability</b><span>'+p.stock+' in stock</span></div></div>'+
+    '<div class="setting-row" style="margin-top:18px"><div><b>Quantity</b><small style="display:block;color:#777">Choose how many packs</small></div><div class="qty" style="margin:0"><button onclick="changeDetailQty(-1)">−</button><b id="detailQty">'+detailQty+'</b><button onclick="changeDetailQty(1)">+</button></div></div>'+
+    '<div class="field"><label>Special request</label><textarea id="detailNote" placeholder="Optional note for the maker"></textarea></div>'+
+    '<div class="modal-actions"><button class="ghost-btn" onclick="closeModal()">Cancel</button><button class="primary-btn" onclick="addProductDetail(\''+p.id+'\')">Add '+money(p.price*detailQty)+'</button></div>');
+}
+function changeDetailQty(delta){
+  detailQty=Math.max(1,Math.min(12,detailQty+delta));
+  var el=document.getElementById('detailQty');
+  if(el)el.textContent=detailQty;
+  var pId='';
+  var addBtn=modal.querySelector('.modal-actions .primary-btn');
+  if(addBtn){
+    var match=(addBtn.getAttribute('onclick')||'').match(/addProductDetail\('([^']+)'\)/);
+    if(match){pId=match[1];var p=product(pId);if(p)addBtn.textContent='Add '+money(p.price*detailQty);}
+  }
+}
+function addProductDetail(id){
+  var item=state.cart.find(function(i){return i.productId===id;});
+  if(item)item.qty+=detailQty;else state.cart.push({productId:id,qty:detailQty});
+  save();updateHeader();closeModal();showToast(detailQty+' × '+product(id).name+' added');
+}
+
+function renderCart(){
+  if(!state.cart.length){
+    cartContents.innerHTML='<div class="empty-state"><span style="font-size:42px">🛍️</span><h3>Your cart is empty</h3><p>Browse a local kitchen and add something homemade.</p><button class="primary-btn" onclick="closeDrawers();navigate(\'marketplace\')">Browse stores</button></div>';
+    return;
+  }
+  var groups={};
+  state.cart.forEach(function(i){var p=product(i.productId);if(!p)return;(groups[p.vendorId]||(groups[p.vendorId]=[])).push(i);});
+  var subtotal=cartSubtotal(),fee=deliveryFee(),groupHtml='';
+  Object.keys(groups).forEach(function(vId){
+    var v=vendor(vId);
+    groupHtml+='<div style="padding:16px 0 2px;border-bottom:1px solid #eee"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><strong style="font-size:12px">'+v.emoji+' '+v.name+'</strong><button class="mini-btn" onclick="closeDrawers();openStore(\''+v.id+'\')">View store</button></div><small class="muted">'+v.eta+' · '+v.area+'</small></div>';
+    groupHtml+=groups[vId].map(function(i){var p=product(i.productId);return '<div class="cart-item"><div class="cart-thumb">'+p.emoji+'</div><div><h4>'+p.name+'</h4><small>'+p.unit+'</small><div class="qty"><button onclick="changeQty(\''+p.id+'\',-1)">−</button><b>'+i.qty+'</b><button onclick="changeQty(\''+p.id+'\',1)">+</button></div></div><strong>'+money(p.price*i.qty)+'</strong></div>';}).join('');
+  });
+  var vendors=Object.keys(groups).length;
+  cartContents.innerHTML=groupHtml+
+    '<div class="cart-summary"><div class="summary-line"><span>Subtotal</span><strong>'+money(subtotal)+'</strong></div><div class="summary-line"><span>Delivery · '+vendors+' '+(vendors===1?'store':'stores')+'</span><strong>'+(fee?money(fee):'Free')+'</strong></div><div class="summary-line"><span>Service</span><strong>Included</strong></div><div class="summary-line total"><span>Total</span><span>'+money(subtotal+fee)+'</span></div><button class="primary-btn checkout-btn" onclick="openCheckout()">Go to checkout · '+money(subtotal+fee)+'</button><button class="ghost-btn" style="width:100%;margin-top:8px" onclick="closeDrawers()">Keep browsing</button></div>';
+}
+
+function openSearch(){
+  var suggestions=['Harissa','Granola','Preserves','Breakfast','Vegan','Noura Pantry'];
+  openModal('<p class="eyebrow">Search PantryMade</p><h2>What are you looking for?</h2><div class="search-panel"><input id="searchInput" placeholder="Store, product, category…" value="'+currentSearch.replace(/"/g,'&quot;')+'"><button class="primary-btn" onclick="applySearch()">Search</button></div>'+
+    '<div class="product-tags" style="margin-top:14px">'+suggestions.map(function(s){return '<button class="ue-filter" onclick="quickSearch(\''+s+'\')">'+s+'</button>';}).join('')+'</div>'+
+    '<p>Searches include store names, product names, categories and tags.</p><div class="modal-actions"><button class="ghost-btn" onclick="clearSearch()">Clear</button><button class="ghost-btn" onclick="closeModal()">Cancel</button></div>');
+  setTimeout(function(){var el=document.getElementById('searchInput');if(el)el.focus();},40);
+}
+function quickSearch(q){
+  currentSearch=q;selectedCategory='All';marketFilter='all';currentView='marketplace';closeModal();render();
+}
+function applySearch(){
+  var input=document.getElementById('searchInput');
+  currentSearch=input?input.value.trim():'';
+  selectedCategory='All';marketFilter='all';currentView='marketplace';currentMode='buyer';closeModal();render();
+}
+function clearSearch(){currentSearch='';selectedCategory='All';marketFilter='all';closeModal();render();}
+
+function openLocation(){
+  var areas=['Ariana','Tunis','La Marsa','Carthage','Le Bardo'];
+  openModal('<p class="eyebrow">Delivery location</p><h2>Where should we deliver?</h2><p>Choose a demo delivery zone. A production version would use a precise address and coverage check.</p>'+
+    '<div style="display:grid;gap:8px;margin-top:14px">'+areas.map(function(a){return '<button class="'+(state.location===a?'primary-btn':'ghost-btn')+'" style="width:100%;justify-content:flex-start;text-align:left" onclick="setLocationQuick(\''+a+'\')">📍 '+a+(state.location===a?' · current':'')+'</button>';}).join('')+'</div>'+
+    '<div class="modal-actions"><button class="ghost-btn" onclick="closeModal()">Cancel</button></div>');
+}
+function setLocationQuick(area){
+  state.location=area;save();updateHeader();closeModal();showToast('Delivering to '+area);render();
+}
+
+function openCheckout(){
+  closeDrawers();
+  var total=cartSubtotal()+deliveryFee();
+  openModal('<p class="eyebrow">Checkout</p><h2>Review delivery</h2>'+
+    '<div class="detail-grid"><div class="detail-box"><b>Delivery</b><span>'+state.location+' · '+(deliverySlot||'ASAP')+'</span></div><div class="detail-box"><b>Items</b><span>'+cartCount()+' item'+(cartCount()===1?'':'s')+'</span></div></div>'+
+    '<div class="form-grid"><div class="field"><label>Name</label><input id="checkoutName" value="Guest"></div><div class="field"><label>Phone</label><input id="checkoutPhone" inputmode="tel" placeholder="+216 …"></div><div class="field full"><label>Delivery address</label><input id="checkoutAddress" value="'+state.location+', Tunisia"></div><div class="field full"><label>Delivery note</label><textarea id="checkoutNote" placeholder="Building, floor, landmark, gate code…"></textarea></div><div class="field full"><label>Payment</label><select id="checkoutPayment"><option>Cash on delivery</option><option>Card · demo</option></select></div></div>'+
+    '<div class="cart-summary"><div class="summary-line"><span>Subtotal</span><strong>'+money(cartSubtotal())+'</strong></div><div class="summary-line"><span>Delivery</span><strong>'+(deliveryFee()?money(deliveryFee()):'Free')+'</strong></div><div class="summary-line total"><span>Total</span><span>'+money(total)+'</span></div></div>'+
+    '<div class="modal-actions"><button class="ghost-btn" onclick="closeModal()">Back</button><button class="primary-btn" onclick="placeOrder()">Place order · '+money(total)+'</button></div>');
+}
 function switchMode(mode){
   currentMode=mode;closeDrawers();
   if(mode==='buyer')currentView='marketplace';
