@@ -1,6 +1,6 @@
-# PantryLane
+# PantryMade
 
-PantryLane is a mobile-first multi-vendor marketplace prototype for shelf-stable homemade food.
+PantryMade is a mobile-first multi-vendor marketplace prototype for shelf-stable homemade food.
 
 ## Included
 - Customer marketplace, search, categories, favorites, cart and checkout
@@ -10,6 +10,8 @@ PantryLane is a mobile-first multi-vendor marketplace prototype for shelf-stable
 - Buyer order tracking
 - Browser persistence through LocalStorage
 - Responsive desktop and mobile UI
+- Installable PWA shell with offline caching
+- GitHub Pages deployment workflow
 
 ## Production roadmap
 Before a real launch, add server-side authentication and roles, database persistence, seller compliance verification, payments and payouts, geocoding/routing, courier location updates, notifications, tax handling and moderation. Home-food laws, allowed food categories, permits and labeling requirements vary by jurisdiction and must be enforced before launch.
