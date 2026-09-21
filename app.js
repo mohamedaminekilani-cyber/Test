@@ -943,6 +943,60 @@ function openCheckout(){
     '<div class="cart-summary"><div class="summary-line"><span>Subtotal</span><strong>'+money(cartSubtotal())+'</strong></div><div class="summary-line"><span>Delivery</span><strong>'+(deliveryFee()?money(deliveryFee()):'Free')+'</strong></div><div class="summary-line total"><span>Total</span><span>'+money(total)+'</span></div></div>'+
     '<div class="modal-actions"><button class="ghost-btn" onclick="closeModal()">Back</button><button class="primary-btn" onclick="placeOrder()">Place order · '+money(total)+'</button></div>');
 }
+
+function placeOrder(){
+  var addressEl=document.getElementById('checkoutAddress');
+  var address=addressEl?addressEl.value.trim():'';
+  if(!address){showToast('Add a delivery address');return;}
+  var nameEl=document.getElementById('checkoutName');
+  var phoneEl=document.getElementById('checkoutPhone');
+  var noteEl=document.getElementById('checkoutNote');
+  var paymentEl=document.getElementById('checkoutPayment');
+  var name=(nameEl&&nameEl.value.trim())||'Guest';
+  var phone=(phoneEl&&phoneEl.value.trim())||'+216 —';
+  var note=(noteEl&&noteEl.value.trim())||'No special note';
+  var payment=(paymentEl&&paymentEl.value)||'Cash on delivery';
+  var areaCoords={
+    Ariana:[36.8669,10.1699],
+    Tunis:[36.8065,10.1815],
+    'La Marsa':[36.8870,10.3250],
+    Carthage:[36.8534,10.3230],
+    'Le Bardo':[36.8090,10.1405]
+  };
+  var coords=areaCoords[state.location]||[36.849,10.19];
+  var grouped={};
+  state.cart.forEach(function(i){
+    var p=product(i.productId);
+    if(p)(grouped[p.vendorId]||(grouped[p.vendorId]=[])).push(i);
+  });
+  Object.keys(grouped).forEach(function(vendorId,idx){
+    var items=grouped[vendorId];
+    var subtotal=items.reduce(function(s,i){return s+product(i.productId).price*i.qty;},0);
+    var fee=subtotal>=60?0:5.5;
+    state.orders.unshift({
+      id:'PM-'+(1100+state.orders.length+idx),
+      customer:name,
+      phone:phone,
+      vendorId:vendorId,
+      items:items,
+      total:subtotal+fee,
+      status:'new',
+      address:address,
+      lat:coords[0]+idx*.002,
+      lng:coords[1]+idx*.002,
+      fee:fee,
+      created:'Just now',
+      payment:payment,
+      notes:note,
+      priority:'normal',
+      prepMinutes:25,
+      channel:'Marketplace',
+      requestedSlot:deliverySlot||'ASAP'
+    });
+  });
+  state.cart=[];save();updateHeader();
+  openModal('<div style="text-align:center;padding:18px 4px"><div style="width:58px;height:58px;border-radius:50%;background:#e9f8ef;display:grid;place-items:center;margin:0 auto 14px;font-size:28px">✓</div><p class="eyebrow">Order confirmed</p><h2>We sent it to the maker</h2><p>Track acceptance, preparation, courier pickup and delivery from your Orders tab.</p><div class="modal-actions" style="justify-content:center"><button class="primary-btn" onclick="closeModal();navigate(\'orders\')">Track order</button></div></div>');
+}
 function switchMode(mode){
   currentMode=mode;closeDrawers();
   if(mode==='buyer')currentView='marketplace';
