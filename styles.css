@@ -37,3 +37,70 @@ button[disabled]{opacity:.45;cursor:not-allowed}.muted{color:var(--muted)}.tiny{
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{padding:13px;border:1px solid var(--line);border-radius:14px}.detail-box b{display:block;font-size:11px;margin-bottom:4px}.detail-box span{font-size:11px;color:var(--muted)}.timeline{display:grid;gap:0;margin:14px 0}.timeline-row{display:grid;grid-template-columns:18px 1fr;gap:9px;min-height:42px}.timeline-dot{width:10px;height:10px;border-radius:50%;background:var(--line);margin-top:3px;position:relative}.timeline-row:not(:last-child) .timeline-dot:after{content:"";position:absolute;width:2px;height:34px;background:var(--line);top:10px;left:4px}.timeline-row.done .timeline-dot{background:var(--green)}.timeline-row.done:not(:last-child) .timeline-dot:after{background:#b9d0bf}.timeline-row b{font-size:10px}.timeline-row small{display:block;color:var(--muted);font-size:9px}
 @media(max-width:1080px){.quick-grid{grid-template-columns:repeat(2,1fr)}.ops-grid,.analytics-grid,.admin-grid,.driver-layout{grid-template-columns:1fr}.real-map{height:430px}.driver-side{grid-template-columns:1fr 1fr}.driver-side>.driver-card:first-child{grid-column:1/-1}}
 @media(max-width:680px){.market-toolbar{grid-template-columns:1fr}.market-toolbar select{display:block}.quick-grid{grid-template-columns:1fr 1fr}.quick-card{padding:13px}.quick-card small{display:none}.order-card-grid{grid-template-columns:1fr}.dashboard-shell.wide{grid-template-columns:1fr}.kanban{grid-template-columns:repeat(4,82vw)}.settings-grid{grid-template-columns:1fr}.driver-layout{display:flex;flex-direction:column}.real-map{height:360px}.driver-side{display:grid;grid-template-columns:1fr}.batch-bar{bottom:78px}.map-toolbar{left:16px;right:16px;top:16px;overflow:auto}.route-summary{grid-template-columns:repeat(3,1fr)}.admin-hero{align-items:flex-start;flex-direction:column}.detail-grid{grid-template-columns:1fr}.product-tags{min-height:20px}}
+
+
+/* ===== Delivery-app buyer UX ===== */
+:root{
+  --ink:#111111;
+  --muted:#6b6b6b;
+  --paper:#ffffff;
+  --white:#ffffff;
+  --line:#e8e8e8;
+  --green:#06c167;
+  --green-2:#05a859;
+  --mint:#e9f8f0;
+  --orange:#ff6b35;
+  --shadow:0 8px 28px rgba(0,0,0,.08);
+}
+body{background:#fff;color:#111}
+.topbar{height:72px;background:rgba(255,255,255,.96);border-bottom:1px solid #ededed;backdrop-filter:blur(14px);padding:0 max(18px,calc((100vw - 1360px)/2));gap:18px}
+.brand-mark{background:#111;border-radius:50%;font-family:"DM Sans",sans-serif;font-weight:900;font-size:18px}
+.brand-copy strong{font-family:"DM Sans",sans-serif;font-weight:900;letter-spacing:-.04em}.brand-copy small{display:none}
+.nav-link{font-size:13px;color:#555;padding:9px 12px}.nav-link.is-active,.nav-link:hover{background:#f2f2f2;color:#111}
+.location-pill{border:0;background:#f3f3f3;border-radius:999px;height:42px;padding:0 14px;gap:6px}.location-pill strong{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.loc-caret{font-size:11px}
+.header-search{border:0;background:#f3f3f3;border-radius:999px;height:42px;min-width:180px;padding:0 16px;display:flex;align-items:center;gap:8px;color:#555;font-weight:600;cursor:pointer}
+.cart-btn{background:#111;color:#fff;border:0;border-radius:999px;height:42px;padding:0 14px}.cart-btn b{background:#fff;color:#111}
+.profile-btn{border:0;background:#111;color:white}
+.page{max-width:1360px}
+.ubereats-home{padding-top:14px}
+.delivery-mode-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:8px 0 16px}
+.delivery-toggle{display:inline-flex;background:#f3f3f3;border-radius:999px;padding:4px}.delivery-toggle button{border:0;background:transparent;border-radius:999px;padding:9px 15px;font-size:12px;font-weight:800;cursor:pointer}.delivery-toggle button.is-active{background:#111;color:#fff}
+.home-search{display:none}
+.category-scroller{display:flex;gap:20px;overflow:auto;padding:8px 2px 16px;scrollbar-width:none}.category-scroller::-webkit-scrollbar{display:none}
+.category-icon-btn{border:0;background:none;min-width:76px;padding:0;display:grid;gap:7px;justify-items:center;cursor:pointer}
+.category-icon{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:#f6f6f6;font-size:27px;transition:.18s}.category-icon-btn:hover .category-icon,.category-icon-btn.is-active .category-icon{transform:translateY(-2px);background:#e9f8f0}
+.category-icon-btn small{font-size:11px;font-weight:700;color:#222}
+.filter-scroller{display:flex;gap:8px;overflow:auto;padding:2px 0 14px;scrollbar-width:none}.filter-scroller::-webkit-scrollbar{display:none}
+.ue-filter{border:1px solid #dedede;background:#fff;border-radius:999px;padding:9px 13px;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}.ue-filter.is-active{background:#111;color:#fff;border-color:#111}
+.offer-strip{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin:12px 0 28px}
+.offer-card{border-radius:18px;padding:22px;min-height:170px;display:flex;justify-content:space-between;overflow:hidden;position:relative;cursor:pointer}.offer-card.black{background:#111;color:#fff}.offer-card.green{background:#d8f3e5}.offer-card h2{font-family:"DM Sans";font-size:29px;letter-spacing:-.05em;line-height:1;margin:5px 0 8px}.offer-card p{margin:0;max-width:300px;font-size:12px;line-height:1.45;opacity:.8}.offer-card .offer-emoji{font-size:72px;align-self:end;filter:drop-shadow(0 8px 12px rgba(0,0,0,.08))}
+.ue-section{margin:30px 0}.ue-section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin-bottom:14px}.ue-section-head h2{margin:0;font-size:25px;letter-spacing:-.04em}.ue-section-head p{margin:4px 0 0;color:#666;font-size:12px}.ue-section-head button{border:0;background:none;font-weight:800;cursor:pointer}
+.restaurant-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px 16px}
+.restaurant-card{cursor:pointer;min-width:0}
+.restaurant-cover{height:180px;border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.restaurant-cover .cover-emoji{font-size:78px;filter:drop-shadow(0 10px 10px rgba(0,0,0,.12));transform:rotate(-4deg)}
+.restaurant-cover.cover-0{background:linear-gradient(145deg,#efd5a9,#f7efe2)}.restaurant-cover.cover-1{background:linear-gradient(145deg,#d6d0f6,#f2eeff)}.restaurant-cover.cover-2{background:linear-gradient(145deg,#ffc6b7,#ffe9df)}.restaurant-cover.cover-3{background:linear-gradient(145deg,#c6ead2,#edf8f1)}.restaurant-cover.cover-4{background:linear-gradient(145deg,#f6ddb7,#fff1d9)}.restaurant-cover.cover-5{background:linear-gradient(145deg,#f9e9a5,#fff8d5)}.restaurant-cover.cover-6{background:linear-gradient(145deg,#d9e8ff,#eff5ff)}.restaurant-cover.cover-7{background:linear-gradient(145deg,#dfe6bf,#f2f5df)}
+.cover-badge{position:absolute;left:10px;top:10px;background:#111;color:#fff;border-radius:999px;padding:7px 9px;font-size:9px;font-weight:900}.cover-heart{position:absolute;right:10px;top:10px;width:34px;height:34px;border-radius:50%;border:0;background:white;font-size:18px;box-shadow:0 3px 10px rgba(0,0,0,.09);cursor:pointer}
+.restaurant-info{padding:10px 2px 0}.restaurant-title-row{display:flex;justify-content:space-between;align-items:center;gap:8px}.restaurant-title-row h3{margin:0;font-size:15px}.rating-dot{min-width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#f0f0f0;font-size:10px;font-weight:900}
+.restaurant-meta,.restaurant-submeta{font-size:11px;color:#666;margin-top:4px}.restaurant-submeta{display:flex;gap:7px}.restaurant-submeta .free{color:#06a85b;font-weight:800}
+.horizontal-restaurants{display:flex;gap:14px;overflow:auto;scrollbar-width:none;padding-bottom:4px}.horizontal-restaurants::-webkit-scrollbar{display:none}.horizontal-restaurants .restaurant-card{min-width:310px;width:310px}
+.order-again-row{display:flex;gap:12px;overflow:auto;scrollbar-width:none}.order-again-card{min-width:250px;border:1px solid #e7e7e7;border-radius:15px;padding:12px;display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center;cursor:pointer}.order-again-thumb{width:62px;height:62px;border-radius:12px;background:#f5f5f5;display:grid;place-items:center;font-size:30px}.order-again-card h4{margin:0 0 3px;font-size:12px}.order-again-card small{color:#666}
+.ue-store-page{max-width:1100px;margin:auto}.store-cover-large{height:280px;border-radius:0 0 20px 20px;display:grid;place-items:center;font-size:100px;position:relative;overflow:hidden}.store-cover-large:after{content:"";position:absolute;inset:auto 0 0;height:45%;background:linear-gradient(transparent,rgba(0,0,0,.18))}
+.store-back{position:absolute;left:18px;top:18px;width:42px;height:42px;border-radius:50%;border:0;background:#fff;font-size:20px;z-index:2;cursor:pointer}.store-like{position:absolute;right:18px;top:18px;width:42px;height:42px;border-radius:50%;border:0;background:#fff;font-size:20px;z-index:2;cursor:pointer}
+.store-main-info{padding:22px 0 12px}.store-main-info h1{font-family:"DM Sans";font-size:34px;letter-spacing:-.05em;margin:0 0 7px}.store-main-info p{margin:3px 0;color:#666;font-size:12px}.store-pill-row{display:flex;gap:8px;overflow:auto;margin:14px 0}.store-pill{background:#f4f4f4;border-radius:999px;padding:8px 10px;font-size:10px;font-weight:800;white-space:nowrap}
+.menu-tabs{position:sticky;top:72px;z-index:10;background:#fff;border-top:1px solid #eee;border-bottom:1px solid #eee;display:flex;gap:22px;overflow:auto;padding:12px 0;scrollbar-width:none}.menu-tabs button{border:0;background:none;padding:8px 0;font-size:11px;font-weight:800;white-space:nowrap}.menu-tabs button.is-active{border-bottom:2px solid #111}
+.menu-group{padding-top:24px;scroll-margin-top:130px}.menu-group h2{font-size:22px;margin:0 0 14px}.menu-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}.menu-item-card{border:1px solid #e4e4e4;border-radius:14px;padding:14px;display:grid;grid-template-columns:1fr 96px;gap:14px;cursor:pointer;min-height:132px}.menu-item-card h3{font-size:14px;margin:0 0 6px}.menu-item-card p{font-size:10px;line-height:1.45;color:#777;margin:0 0 10px}.menu-item-card strong{font-size:12px}.menu-item-art{border-radius:12px;background:#f4f4f4;display:grid;place-items:center;font-size:42px;position:relative}.menu-item-art button{position:absolute;right:7px;bottom:7px;width:31px;height:31px;border:0;border-radius:50%;background:#fff;font-size:20px;box-shadow:0 3px 9px rgba(0,0,0,.1);cursor:pointer}
+.floating-cart{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:25;width:min(680px,calc(100% - 28px));background:#111;color:white;border:0;border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 10px 35px rgba(0,0,0,.26);font-weight:900;cursor:pointer}
+.ue-orders{max-width:880px;margin:auto}.active-order-card{border:1px solid #e6e6e6;border-radius:18px;overflow:hidden;margin-bottom:18px}.active-order-map{height:230px;background:#eef2ef}.active-order-body{padding:18px}.active-order-body h2{margin:0 0 4px;font-size:20px}.active-order-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:14px 0}.active-order-steps span{height:5px;border-radius:99px;background:#e8e8e8}.active-order-steps span.done{background:#111}
+.past-order{display:grid;grid-template-columns:62px 1fr auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #eee}.past-order .thumb{width:62px;height:62px;border-radius:12px;background:#f4f4f4;display:grid;place-items:center;font-size:28px}.past-order h4{margin:0;font-size:12px}.past-order small{display:block;color:#666;margin-top:3px}.past-order button{border:1px solid #ddd;background:#fff;border-radius:999px;padding:8px 11px;font-size:10px;font-weight:800}
+@media(max-width:900px){.restaurant-grid{grid-template-columns:repeat(2,1fr)}.offer-strip{grid-template-columns:1fr}.menu-list{grid-template-columns:1fr}}
+@media(max-width:680px){
+  .topbar{height:64px;padding:0 12px}.desktop-nav,.brand-copy{display:none}.brand-mark{width:34px;height:34px}.header-search{min-width:auto;width:42px;padding:0;justify-content:center}.location-pill{order:2;margin-right:auto;max-width:185px}.header-actions{margin-left:0;width:100%}.cart-btn{padding:0 12px}.profile-btn{display:none}
+  .mobile-nav{background:#fff;border-top:1px solid #ececec}.mobile-nav-item.is-active{color:#111}.mobile-nav-item.is-active span{background:#111;color:#fff}
+  .ubereats-home{padding:8px 14px 90px}.delivery-mode-row{margin-top:4px}.home-search{display:flex;background:#f3f3f3;border-radius:12px;padding:12px 14px;align-items:center;gap:8px;margin-bottom:10px;color:#666}.home-search button{border:0;background:none;flex:1;text-align:left;color:#777}
+  .category-scroller{gap:13px}.category-icon-btn{min-width:64px}.category-icon{width:54px;height:54px;font-size:24px}.category-icon-btn small{font-size:10px}
+  .offer-card{min-height:145px;padding:18px}.offer-card h2{font-size:24px}.offer-card .offer-emoji{font-size:58px}
+  .ue-section{margin:24px 0}.ue-section-head h2{font-size:21px}.restaurant-grid{grid-template-columns:1fr;gap:22px}.restaurant-cover{height:190px}.horizontal-restaurants .restaurant-card{min-width:82vw;width:82vw}
+  .ue-store-page{padding-bottom:94px}.store-cover-large{height:230px;border-radius:0;margin:0 -14px}.store-main-info{padding:18px 2px}.store-main-info h1{font-size:29px}.menu-tabs{top:64px;margin:0 -14px;padding-left:14px}.menu-list{grid-template-columns:1fr}.menu-item-card{grid-template-columns:1fr 92px}
+  .ue-orders{padding-bottom:85px}.active-order-map{height:180px}.past-order{grid-template-columns:54px 1fr auto}.past-order .thumb{width:54px;height:54px}
+}
