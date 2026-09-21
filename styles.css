@@ -104,3 +104,12 @@ body{background:#fff;color:#111}
   .ue-store-page{padding-bottom:94px}.store-cover-large{height:230px;border-radius:0;margin:0 -14px}.store-main-info{padding:18px 2px}.store-main-info h1{font-size:29px}.menu-tabs{top:64px;margin:0 -14px;padding-left:14px}.menu-list{grid-template-columns:1fr}.menu-item-card{grid-template-columns:1fr 92px}
   .ue-orders{padding-bottom:85px}.active-order-map{height:180px}.past-order{grid-template-columns:54px 1fr auto}.past-order .thumb{width:54px;height:54px}
 }
+
+.store-cover-large.cover-0{background:linear-gradient(145deg,#efd5a9,#f7efe2)}
+.store-cover-large.cover-1{background:linear-gradient(145deg,#d6d0f6,#f2eeff)}
+.store-cover-large.cover-2{background:linear-gradient(145deg,#ffc6b7,#ffe9df)}
+.store-cover-large.cover-3{background:linear-gradient(145deg,#c6ead2,#edf8f1)}
+.store-cover-large.cover-4{background:linear-gradient(145deg,#f6ddb7,#fff1d9)}
+.store-cover-large.cover-5{background:linear-gradient(145deg,#f9e9a5,#fff8d5)}
+.store-cover-large.cover-6{background:linear-gradient(145deg,#d9e8ff,#eff5ff)}
+.store-cover-large.cover-7{background:linear-gradient(145deg,#dfe6bf,#f2f5df)}
