@@ -850,6 +850,76 @@ function render(){
   else renderMarketplace();
   updateHeader();
 }
+function navigate(view){
+  currentMode='buyer';
+  currentView=view||'marketplace';
+  closeDrawers();
+  closeModal();
+  render();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function bindStaticInteractions(){
+  document.addEventListener('click',function(e){
+    var nav=e.target.closest('[data-nav]');
+    if(nav){
+      e.preventDefault();
+      navigate(nav.dataset.nav);
+      return;
+    }
+    var mode=e.target.closest('[data-mode]');
+    if(mode){
+      e.preventDefault();
+      switchMode(mode.dataset.mode);
+      return;
+    }
+    var modeAction=e.target.closest('[data-action="mode"]');
+    if(modeAction){
+      e.preventDefault();
+      openDrawer('mode');
+      return;
+    }
+    var closeBtn=e.target.closest('[data-close]');
+    if(closeBtn){
+      e.preventDefault();
+      closeDrawers();
+    }
+  });
+
+  var cartBtn=document.getElementById('cartBtn');
+  if(cartBtn)cartBtn.addEventListener('click',function(){openDrawer('cart');});
+
+  var profileBtn=document.getElementById('profileBtn');
+  if(profileBtn)profileBtn.addEventListener('click',function(){openDrawer('mode');});
+
+  var searchBtn=document.getElementById('searchBtn');
+  if(searchBtn)searchBtn.addEventListener('click',openSearch);
+
+  var locationBtn=document.getElementById('locationBtn');
+  if(locationBtn)locationBtn.addEventListener('click',openLocation);
+
+  if(scrim)scrim.addEventListener('click',closeDrawers);
+
+  if(modalWrap)modalWrap.addEventListener('click',function(e){
+    if(e.target===modalWrap)closeModal();
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      closeDrawers();
+      closeModal();
+    }
+    if(e.key==='Enter' && document.getElementById('searchInput') && modalWrap.classList.contains('is-open')){
+      applySearch();
+    }
+  });
+
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+  }
+}
+
 upgradeData();
+bindStaticInteractions();
 
 render();
