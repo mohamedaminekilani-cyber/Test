@@ -1,0 +1,9 @@
+{
+  "name":"PantryMade Marketplace",
+  "short_name":"PantryMade",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f7f3ea",
+  "theme_color":"#214d3a",
+  "description":"A multi-vendor marketplace for shelf-stable homemade food and local delivery."
+}
