@@ -680,6 +680,160 @@ function renderAdmin(){
   const incidents=[{t:'Late handoff',d:'PM-1045 has been ready for 18 minutes.',risk:'med'},{t:'Low inventory',d:'Fig & Rose Preserve has 5 units remaining.',risk:'low'},{t:'Priority delivery',d:'PM-1049 requested priority handling.',risk:'med'}];
   app.innerHTML='<div class="page admin-page"><section class="admin-hero"><div><p class="eyebrow" style="color:#9db1a5">Marketplace operations</p><h1>PantryMade control room</h1><p>Monitor marketplace health, vendors, fulfilment and delivery load.</p></div><span class="online-toggle">● Systems healthy</span></section><div class="metric-grid" style="margin-top:15px"><div class="metric"><small>Demo GMV</small><strong>'+money(gmv)+'</strong><div class="trend">Across '+state.orders.length+' orders</div></div><div class="metric"><small>Active orders</small><strong>'+active.length+'</strong><div class="trend">'+ready+' waiting for courier</div></div><div class="metric"><small>Verified vendors</small><strong>'+state.vendors.length+'</strong><div class="trend">100% demo verification</div></div><div class="metric"><small>Delivery SLA</small><strong>92%</strong><div class="trend">Within target window</div></div></div><div class="admin-grid"><section class="panel"><div class="panel-head"><div><h3>Vendor network</h3><small class="muted">Quality, fulfilment and marketplace commission.</small></div></div><div class="admin-list">'+state.vendors.map(function(v){return '<div class="vendor-review"><div class="avatar">'+v.initials+'</div><div><b>'+v.name+'</b><div class="product-meta" style="margin:4px 0 0"><span>'+v.area+'</span><span>★ '+v.rating+'</span><span>'+v.fulfilment+'% fulfil</span><span>'+v.commission+'% fee</span></div></div><span class="risk-chip risk-low">Verified</span></div>';}).join('')+'</div></section><aside><section class="panel"><div class="panel-head"><h3>Operations alerts</h3></div>'+incidents.map(function(x){return '<div class="incident"><b>'+x.t+'</b><small>'+x.d+'</small></div>';}).join('')+'</section><section class="panel"><div class="panel-head"><h3>Order state</h3></div><div class="breakdown">'+['new','preparing','ready','driver_assigned','delivering','delivered'].map(function(s){const n=state.orders.filter(function(o){return o.status===s;}).length,pct=Math.min(100,n/Math.max(1,state.orders.length)*100);return '<div class="break-row"><span>'+statusLabel(s)+'</span><b>'+n+'</b><div class="break-track"><div class="break-fill" style="width:'+pct+'%"></div></div></div>';}).join('')+'</div></section></aside></div></div>';
 }
+
+
+/* ===== Uber Eats-style buyer experience ===== */
+var fulfillmentMode='delivery';
+var marketFilter='all';
+var storeMenuCategory='All';
+var buyerTrackMap=null;
+var buyerTrackLayer=null;
+
+function setFulfillmentMode(mode){fulfillmentMode=mode;render();}
+function setMarketFilter(filter){marketFilter=filter;render();}
+function setBuyerCategory(cat){selectedCategory=cat;render();}
+function categoryEmoji(cat){
+  return ({All:'🍽️',Breakfast:'🥐',Snacks:'🍪',Spreads:'🫙',Preserves:'🍯',Spices:'🌶️',Grains:'🥣',Sweets:'🍰',Drinks:'☕',Oils:'🫒'})[cat]||'🍴';
+}
+function vendorCoverIndex(v){var i=state.vendors.findIndex(function(x){return x.id===v.id;});return Math.max(0,i)%8;}
+function vendorEtaStart(v){var m=String(v.eta||'35').match(/\d+/);return m?Number(m[0]):35;}
+function vendorFee(v){
+  var i=state.vendors.findIndex(function(x){return x.id===v.id;});
+  return i%3===0?0:(i%3===1?2.5:4.5);
+}
+function vendorOffer(v){
+  var i=state.vendors.findIndex(function(x){return x.id===v.id;});
+  return ['20% off selected items','Buy 2, save 15%','Free delivery','Spend 35 DT, save 6 DT'][i%4];
+}
+function restaurantCard(v,compact){
+  var fee=vendorFee(v),idx=vendorCoverIndex(v),count=state.products.filter(function(p){return p.vendorId===v.id;}).length;
+  return '<article class="restaurant-card" onclick="openStore(\''+v.id+'\')">'+
+    '<div class="restaurant-cover cover-'+idx+'">'+
+      '<span class="cover-badge">'+vendorOffer(v)+'</span>'+
+      '<button class="cover-heart" onclick="event.stopPropagation();showToast(\'Saved '+v.name+'\')">♡</button>'+
+      '<span class="cover-emoji">'+(v.emoji||v.cover||'🍽️')+'</span>'+
+    '</div>'+
+    '<div class="restaurant-info"><div class="restaurant-title-row"><h3>'+v.name+'</h3><span class="rating-dot">'+v.rating+'</span></div>'+
+    '<div class="restaurant-meta">'+v.category+' · '+count+' items</div>'+
+    '<div class="restaurant-submeta"><span>'+v.eta+'</span><span>•</span><span class="'+(fee===0?'free':'')+'">'+(fee===0?'0 DT delivery':money(fee)+' delivery')+'</span><span>•</span><span>'+v.area+'</span></div></div>'+
+  '</article>';
+}
+function storeCard(v){return restaurantCard(v,false);}
+
+function getMarketplaceVendors(){
+  var list=state.vendors.slice();
+  if(selectedCategory!=='All'){
+    var ids=new Set(state.products.filter(function(p){return p.category===selectedCategory;}).map(function(p){return p.vendorId;}));
+    list=list.filter(function(v){return ids.has(v.id);});
+  }
+  if(currentSearch){
+    var q=currentSearch.toLowerCase();
+    list=list.filter(function(v){
+      var prodText=state.products.filter(function(p){return p.vendorId===v.id;}).map(function(p){return p.name+' '+p.category+' '+(p.tags||[]).join(' ');}).join(' ');
+      return (v.name+' '+v.category+' '+v.area+' '+prodText).toLowerCase().includes(q);
+    });
+  }
+  if(marketFilter==='under30')list=list.filter(function(v){return vendorEtaStart(v)<=30;});
+  if(marketFilter==='free')list=list.filter(function(v){return vendorFee(v)===0;});
+  if(marketFilter==='top')list=list.filter(function(v){return v.rating>=4.9;});
+  if(marketFilter==='offers')list=list.slice().sort(function(a,b){return vendorFee(a)-vendorFee(b);});
+  return list;
+}
+function renderMarketplace(){
+  var cats=['All'].concat(Array.from(new Set(state.products.map(function(p){return p.category;}))).slice(0,9));
+  var vendors=getMarketplaceVendors();
+  var delivered=state.orders.filter(function(o){return o.status==='delivered';}).slice(0,5);
+  var fast=state.vendors.filter(function(v){return vendorEtaStart(v)<=30;});
+  var free=state.vendors.filter(function(v){return vendorFee(v)===0;});
+  app.innerHTML='<div class="page ubereats-home">'+
+    '<div class="delivery-mode-row"><div class="delivery-toggle"><button class="'+(fulfillmentMode==='delivery'?'is-active':'')+'" onclick="setFulfillmentMode(\'delivery\')">Delivery</button><button class="'+(fulfillmentMode==='pickup'?'is-active':'')+'" onclick="setFulfillmentMode(\'pickup\')">Pickup</button></div><small class="muted">To '+state.location+' · '+(fulfillmentMode==='delivery'?'Now':'Ready in 15–30 min')+'</small></div>'+
+    '<div class="home-search"><span>⌕</span><button onclick="openSearch()">Search dishes, stores, or cuisines</button></div>'+
+    '<div class="category-scroller">'+cats.map(function(cat){return '<button class="category-icon-btn '+(selectedCategory===cat?'is-active':'')+'" onclick="setBuyerCategory(\''+cat+'\')"><span class="category-icon">'+categoryEmoji(cat)+'</span><small>'+cat+'</small></button>';}).join('')+'</div>'+
+    '<div class="filter-scroller"><button class="ue-filter '+(marketFilter==='all'?'is-active':'')+'" onclick="setMarketFilter(\'all\')">All</button><button class="ue-filter '+(marketFilter==='offers'?'is-active':'')+'" onclick="setMarketFilter(\'offers\')">Offers</button><button class="ue-filter '+(marketFilter==='under30'?'is-active':'')+'" onclick="setMarketFilter(\'under30\')">Under 30 min</button><button class="ue-filter '+(marketFilter==='free'?'is-active':'')+'" onclick="setMarketFilter(\'free\')">0 DT delivery</button><button class="ue-filter '+(marketFilter==='top'?'is-active':'')+'" onclick="setMarketFilter(\'top\')">Top rated</button></div>'+
+    '<div class="offer-strip"><article class="offer-card black" onclick="setMarketFilter(\'offers\')"><div><small>THIS WEEK</small><h2>Local favorites,<br>better value.</h2><p>Discover rotating offers from verified home kitchens around Tunis.</p></div><span class="offer-emoji">🛍️</span></article><article class="offer-card green" onclick="setMarketFilter(\'free\')"><div><small>DELIVERY DEAL</small><h2>0 DT delivery</h2><p>Browse selected makers with no delivery fee in this demo.</p></div><span class="offer-emoji">🛵</span></article></div>'+
+    (delivered.length?'<section class="ue-section"><div class="ue-section-head"><div><h2>Order again</h2><p>Your recent favorites</p></div><button onclick="navigate(\'orders\')">See orders →</button></div><div class="order-again-row">'+delivered.map(function(o){var v=vendor(o.vendorId);return '<article class="order-again-card" onclick="reorder(\''+o.id+'\')"><div class="order-again-thumb">'+v.emoji+'</div><div><h4>'+v.name+'</h4><small>'+orderItemNames(o)+'</small><div class="restaurant-submeta"><span>'+money(o.total)+'</span><span>•</span><span>Reorder</span></div></div></article>';}).join('')+'</div></section>':'')+
+    '<section class="ue-section"><div class="ue-section-head"><div><h2>'+((selectedCategory!=='All'||marketFilter!=='all'||currentSearch)?'Results for you':'Featured on PantryMade')+'</h2><p>'+vendors.length+' nearby home kitchens</p></div><button onclick="navigate(\'stores\')">See all →</button></div>'+
+      '<div class="restaurant-grid">'+(vendors.length?vendors.map(function(v){return restaurantCard(v,false);}).join(''):'<div class="empty-state" style="grid-column:1/-1"><span>⌕</span><h3>No stores match</h3><p>Try removing a filter or searching something else.</p></div>')+'</div></section>'+
+    (fast.length?'<section class="ue-section"><div class="ue-section-head"><div><h2>Under 30 minutes</h2><p>Faster pickup and delivery options</p></div><button onclick="setMarketFilter(\'under30\')">See all →</button></div><div class="horizontal-restaurants">'+fast.map(function(v){return restaurantCard(v,true);}).join('')+'</div></section>':'')+
+    (free.length?'<section class="ue-section"><div class="ue-section-head"><div><h2>0 DT delivery</h2><p>Selected makers in this demo</p></div><button onclick="setMarketFilter(\'free\')">See all →</button></div><div class="horizontal-restaurants">'+free.map(function(v){return restaurantCard(v,true);}).join('')+'</div></section>':'')+
+    '<section class="ue-section"><div class="ue-section-head"><div><h2>Explore every maker</h2><p>Independent kitchens around Greater Tunis</p></div></div><div class="restaurant-grid">'+state.vendors.slice().reverse().map(function(v){return restaurantCard(v,false);}).join('')+'</div></section>'+
+    '</div>';
+}
+function renderStores(){
+  var cats=['All'].concat(Array.from(new Set(state.products.map(function(p){return p.category;}))));
+  var list=getMarketplaceVendors();
+  app.innerHTML='<div class="page ubereats-home"><div class="ue-section-head" style="margin-top:16px"><div><h2>Browse PantryMade</h2><p>Find a home kitchen by category, ETA, rating, or delivery fee.</p></div></div>'+
+    '<div class="home-search" style="display:flex"><span>⌕</span><button onclick="openSearch()">'+(currentSearch||'Search stores and dishes')+'</button></div>'+
+    '<div class="category-scroller">'+cats.map(function(cat){return '<button class="category-icon-btn '+(selectedCategory===cat?'is-active':'')+'" onclick="setBuyerCategory(\''+cat+'\');navigate(\'stores\')"><span class="category-icon">'+categoryEmoji(cat)+'</span><small>'+cat+'</small></button>';}).join('')+'</div>'+
+    '<div class="filter-scroller"><button class="ue-filter '+(marketFilter==='all'?'is-active':'')+'" onclick="setMarketFilter(\'all\')">All</button><button class="ue-filter '+(marketFilter==='offers'?'is-active':'')+'" onclick="setMarketFilter(\'offers\')">Offers</button><button class="ue-filter '+(marketFilter==='under30'?'is-active':'')+'" onclick="setMarketFilter(\'under30\')">Under 30 min</button><button class="ue-filter '+(marketFilter==='free'?'is-active':'')+'" onclick="setMarketFilter(\'free\')">0 DT delivery</button><button class="ue-filter '+(marketFilter==='top'?'is-active':'')+'" onclick="setMarketFilter(\'top\')">Top rated</button></div>'+
+    '<div class="restaurant-grid">'+(list.length?list.map(function(v){return restaurantCard(v,false);}).join(''):'<div class="empty-state" style="grid-column:1/-1"><span>⌕</span><h3>No nearby matches</h3><p>Clear a filter to see more stores.</p></div>')+'</div></div>';
+}
+function openStore(id){selectedStore=id;storeMenuCategory='All';currentView='store';currentMode='buyer';closeDrawers();render();window.scrollTo(0,0);}
+function storeThemeClass(v){return 'cover-'+vendorCoverIndex(v);}
+function menuItemCard(p){
+  return '<article class="menu-item-card" onclick="openProductDetail(\''+p.id+'\')"><div><h3>'+p.name+'</h3><p>'+p.badge+' · '+p.unit+' · Shelf life '+p.shelf+'</p><strong>'+money(p.price)+'</strong></div>'+
+    '<div class="menu-item-art">'+p.emoji+'<button onclick="event.stopPropagation();addToCart(\''+p.id+'\')">+</button></div></article>';
+}
+function scrollMenu(cat){
+  storeMenuCategory=cat;
+  var el=document.getElementById('menu-'+cat.replace(/[^a-z0-9]/gi,'-'));
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderStore(){
+  var v=vendor(selectedStore)||state.vendors[0],list=state.products.filter(function(p){return p.vendorId===v.id;});
+  var groups=Array.from(new Set(list.map(function(p){return p.category;})));
+  var fee=vendorFee(v);
+  app.innerHTML='<div class="page ue-store-page">'+
+    '<section class="store-cover-large '+storeThemeClass(v)+'"><button class="store-back" onclick="navigate(\'marketplace\')">‹</button><button class="store-like" onclick="showToast(\'Saved '+v.name+'\')">♡</button><span>'+(v.emoji||v.cover)+'</span></section>'+
+    '<section class="store-main-info"><h1>'+v.name+'</h1><p>'+v.category+' · '+v.area+'</p><p>'+v.bio+'</p>'+
+      '<div class="store-pill-row"><span class="store-pill">★ '+v.rating+' ('+v.reviewCount+')</span><span class="store-pill">'+v.eta+'</span><span class="store-pill">'+(fee===0?'0 DT delivery':money(fee)+' delivery')+'</span><span class="store-pill">'+v.minimum+' DT minimum</span><span class="store-pill">'+v.fulfilment+'% fulfilment</span></div>'+
+      '<div class="offer-card green" style="min-height:110px;padding:16px"><div><small>STORE OFFER</small><h2 style="font-size:22px">'+vendorOffer(v)+'</h2><p>Applied automatically to eligible items in this demo.</p></div><span class="offer-emoji" style="font-size:48px">🏷️</span></div>'+
+    '</section>'+
+    '<nav class="menu-tabs"><button onclick="scrollMenu(\'Popular\')">Popular</button>'+groups.map(function(g){return '<button onclick="scrollMenu(\''+g+'\')">'+g+'</button>';}).join('')+'</nav>'+
+    '<section class="menu-group" id="menu-Popular"><h2>Popular</h2><div class="menu-list">'+list.slice().sort(function(a,b){return (b.reviews||0)-(a.reviews||0);}).slice(0,4).map(menuItemCard).join('')+'</div></section>'+
+    groups.map(function(g){return '<section class="menu-group" id="menu-'+g.replace(/[^a-z0-9]/gi,'-')+'"><h2>'+g+'</h2><div class="menu-list">'+list.filter(function(p){return p.category===g;}).map(menuItemCard).join('')+'</div></section>';}).join('')+
+    '</div>'+
+    (state.cart.length?'<button class="floating-cart" onclick="openDrawer(\'cart\')"><span>View basket · '+cartCount()+' item'+(cartCount()===1?'':'s')+'</span><span>'+money(cartSubtotal()+deliveryFee())+'</span></button>':'');
+}
+function initBuyerTrackingMap(order){
+  var el=document.getElementById('buyerOrderMap');if(!el||typeof L==='undefined'||!order)return;
+  if(buyerTrackMap){try{buyerTrackMap.remove();}catch(e){}buyerTrackMap=null;}
+  var v=vendor(order.vendorId),dest=(order.lat&&order.lng)?[order.lat,order.lng]:[36.849,10.19],origin=[v.lat||36.8665,v.lng||10.1647];
+  buyerTrackMap=L.map('buyerOrderMap',{zoomControl:false,attributionControl:false}).setView(origin,12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(buyerTrackMap);
+  L.circleMarker(origin,{radius:7,color:'#fff',weight:3,fillColor:'#111',fillOpacity:1}).addTo(buyerTrackMap).bindPopup(v.name);
+  L.circleMarker(dest,{radius:7,color:'#fff',weight:3,fillColor:'#06c167',fillOpacity:1}).addTo(buyerTrackMap).bindPopup(order.address);
+  var coords=origin.slice().reverse().join(',')+';'+dest.slice().reverse().join(',');
+  fetch('https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson').then(function(r){return r.json();}).then(function(data){
+    if(data.code==='Ok'&&data.routes&&data.routes[0]){
+      buyerTrackLayer=L.geoJSON(data.routes[0].geometry,{style:{color:'#111',weight:5,opacity:.8}}).addTo(buyerTrackMap);
+      buyerTrackMap.fitBounds(buyerTrackLayer.getBounds(),{padding:[24,24]});
+    }else throw new Error();
+  }).catch(function(){
+    buyerTrackLayer=L.polyline([origin,dest],{color:'#111',weight:4,dashArray:'7 7'}).addTo(buyerTrackMap);
+    buyerTrackMap.fitBounds(buyerTrackLayer.getBounds(),{padding:[24,24]});
+  });
+}
+function renderOrders(){
+  var active=state.orders.find(function(o){return !['delivered','rejected'].includes(o.status);});
+  var past=state.orders.filter(function(o){return o.status==='delivered'||o.status==='rejected';});
+  var stage=active?orderStage(active.status):0,activeVendor=active&&vendor(active.vendorId);
+  app.innerHTML='<div class="page ue-orders"><div class="ue-section-head" style="margin-top:18px"><div><h2>Your orders</h2><p>Track active deliveries and reorder past favorites.</p></div></div>'+
+    (active?'<article class="active-order-card"><div id="buyerOrderMap" class="active-order-map"></div><div class="active-order-body"><small class="muted">'+active.id+' · '+activeVendor.name+'</small><h2>'+statusLabel(active.status)+'</h2><p class="muted">'+(active.status==='new'?'Waiting for the maker to accept your order.':active.status==='preparing'?'Your order is being prepared.':active.status==='ready'?'Packed and waiting for a courier.':active.status==='driver_assigned'?'A courier is heading to the pickup.':active.status==='delivering'?'Your courier is on the way to you.':'In progress')+'</p>'+
+      '<div class="active-order-steps">'+[0,1,2,3].map(function(i){return '<span class="'+(i<=Math.min(3,stage)?'done':'')+'"></span>';}).join('')+'</div>'+
+      '<div class="detail-grid"><div class="detail-box"><b>ETA</b><span>'+activeVendor.eta+'</span></div><div class="detail-box"><b>Delivering to</b><span>'+active.address+'</span></div></div>'+
+      '<div class="order-actions" style="margin-top:14px"><button class="ghost-btn" onclick="showToast(\'Support opened\')">Get help</button><button class="primary-btn" onclick="openBuyerOrder(\''+active.id+'\')">Order details</button></div></div></article>':'<div class="empty-state"><span>✓</span><h3>No active order</h3><p>When you order, live progress will appear here.</p></div>')+
+    '<section class="ue-section"><div class="ue-section-head"><div><h2>Past orders</h2><p>Quickly order your favorites again.</p></div></div>'+
+      (past.length?past.map(function(o){var v=vendor(o.vendorId);return '<article class="past-order"><div class="thumb">'+v.emoji+'</div><div><h4>'+v.name+' · '+o.id+'</h4><small>'+orderItemNames(o)+'</small><small>'+o.created+' · '+money(o.total)+'</small></div><button onclick="reorder(\''+o.id+'\')">Reorder</button></article>';}).join(''):'<p class="muted">No past orders yet.</p>')+
+    '</section></div>';
+  if(active)setTimeout(function(){initBuyerTrackingMap(active);},0);
+}
+function openBuyerOrder(id){
+  var o=state.orders.find(function(x){return x.id===id;}),v=vendor(o.vendorId);
+  openModal('<p class="eyebrow">'+o.id+'</p><h2>'+v.name+'</h2><p>'+orderItemNames(o)+'</p>'+timelineHtml(o)+
+    '<div class="detail-grid"><div class="detail-box"><b>Delivery address</b><span>'+o.address+'</span></div><div class="detail-box"><b>Payment</b><span>'+o.payment+'</span></div><div class="detail-box"><b>Note</b><span>'+o.notes+'</span></div><div class="detail-box"><b>Total</b><span>'+money(o.total)+'</span></div></div>'+
+    '<div class="modal-actions"><button class="ghost-btn" onclick="showToast(\'Support opened\')">Get help</button><button class="primary-btn" onclick="closeModal()">Done</button></div>');
+}
 function switchMode(mode){
   currentMode=mode;closeDrawers();
   if(mode==='buyer')currentView='marketplace';
