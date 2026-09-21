@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f2e9" />
+  <meta name="description" content="PantryMade — a local marketplace for shelf-stable homemade food." />
+  <title>PantryMade · Homemade food marketplace</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-nav="marketplace" aria-label="PantryMade home">
+        <span class="brand-mark">P</span>
+        <span class="brand-copy"><strong>PantryMade</strong><small>made close to home</small></span>
+      </button>
+      <nav class="desktop-nav" aria-label="Primary">
+        <button class="nav-link is-active" data-nav="marketplace">Marketplace</button>
+        <button class="nav-link" data-nav="stores">Stores</button>
+        <button class="nav-link" data-nav="orders">My orders</button>
+      </nav>
+      <div class="header-actions">
+        <button class="location-pill" id="locationBtn"><span>⌖</span><span class="hide-sm">Deliver to</span><strong id="locationText">Ariana</strong></button>
+        <button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button>
+        <button class="cart-btn" id="cartBtn" aria-label="Cart"><span>Bag</span><b id="cartCount">0</b></button>
+        <button class="profile-btn" id="profileBtn" aria-label="Switch app mode">SS</button>
+      </div>
+    </header>
+
+    <main id="app"></main>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <button class="mobile-nav-item is-active" data-nav="marketplace"><span>⌂</span><small>Home</small></button>
+      <button class="mobile-nav-item" data-nav="stores"><span>▦</span><small>Stores</small></button>
+      <button class="mobile-nav-item" data-nav="orders"><span>▤</span><small>Orders</small></button>
+      <button class="mobile-nav-item" data-action="mode"><span>◎</span><small>Work</small></button>
+    </nav>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <aside class="drawer cart-drawer" id="cartDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><p class="eyebrow">Your basket</p><h2>Ready when you are</h2></div>
+      <button class="icon-btn" data-close="cart">×</button>
+    </div>
+    <div id="cartContents"></div>
+  </aside>
+
+  <aside class="drawer mode-drawer" id="modeDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <div><p class="eyebrow">Switch workspace</p><h2>Choose your view</h2></div>
+      <button class="icon-btn" data-close="mode">×</button>
+    </div>
+    <div class="mode-list">
+      <button class="mode-card is-active" data-mode="buyer"><span class="mode-icon">☺</span><div><strong>Buyer</strong><small>Browse homemade goods and order delivery.</small></div><span>›</span></button>
+      <button class="mode-card" data-mode="vendor"><span class="mode-icon">▣</span><div><strong>Seller studio</strong><small>Manage storefront, products and orders.</small></div><span>›</span></button>
+      <button class="mode-card" data-mode="driver"><span class="mode-icon">↗</span><div><strong>Courier app</strong><small>Accept routes and manage deliveries.</small></div><span>›</span></button>
+    </div>
+  </aside>
+
+  <div class="modal-wrap" id="modalWrap" aria-hidden="true"><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
